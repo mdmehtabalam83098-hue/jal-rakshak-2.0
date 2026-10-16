@@ -1,0 +1,314 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#063b46">
+  <title>JalRakshak 2.0 | Water Network Safety</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand-mark">JR</div>
+    <div class="brand-copy">
+      <h1>JalRakshak <span>2.0</span></h1>
+      <p>Predictive Water-Intrusion Risk Detection & Pipe-Damage Localisation</p>
+    </div>
+    <div class="top-status">
+      <span class="status-dot"></span>
+      <span id="connectionStatus">Offline-ready demo</span>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="intro-row">
+      <div>
+        <p class="eyebrow">MONITOR · LOCALISE · ALERT</p>
+        <h2>Water network overview</h2>
+        <p class="muted">
+          Prototype mode: readings are simulated. No real sensor is connected.
+        </p>
+      </div>
+
+      <div class="controls">
+        <label for="scenario">
+          Test scenario
+          <select id="scenario">
+            <option value="normal">Normal operation</option>
+            <option value="leak">Simulated leak between B–C</option>
+            <option value="blockage">Simulated blockage near B</option>
+            <option value="pump">Pump stopped</option>
+            <option value="sensor">Sensor C communication fault</option>
+          </select>
+        </label>
+        <button id="runScenario" class="btn primary">Apply scenario</button>
+      </div>
+    </section>
+
+    <section class="metrics-grid">
+      <article class="metric">
+        <div class="metric-head">
+          <span>Network pressure</span>
+          <span class="metric-icon">◉</span>
+        </div>
+        <strong id="pressureValue">2.8 <small>bar</small></strong>
+        <p id="pressureNote">Within demo range</p>
+      </article>
+
+      <article class="metric">
+        <div class="metric-head">
+          <span>Water flow</span>
+          <span class="metric-icon">≈</span>
+        </div>
+        <strong id="flowValue">22.0 <small>L/min</small></strong>
+        <p id="flowNote">Flow stable</p>
+      </article>
+
+      <article class="metric">
+        <div class="metric-head">
+          <span>Suspected section</span>
+          <span class="metric-icon">⌖</span>
+        </div>
+        <strong id="sectionValue">None</strong>
+        <p id="sectionNote">No simulated fault</p>
+      </article>
+
+      <article class="metric">
+        <div class="metric-head">
+          <span>System status</span>
+          <span id="statusPill" class="pill good">NORMAL</span>
+        </div>
+        <strong id="statusValue">Monitoring</strong>
+        <p id="statusNote">All demo nodes reporting</p>
+      </article>
+    </section>
+
+    <section class="main-grid">
+      <article class="panel map-panel">
+        <div class="panel-title">
+          <div>
+            <h3>Pipeline location map</h3>
+            <p class="muted">Schematic route using configured GPS coordinates</p>
+          </div>
+          <button id="editCoords" class="btn secondary">Edit GPS points</button>
+        </div>
+
+        <div class="map-wrap">
+          <svg id="pipelineMap" viewBox="0 0 760 300"
+               role="img" aria-label="Schematic pipeline map">
+            <defs>
+              <pattern id="grid" width="25" height="25"
+                       patternUnits="userSpaceOnUse">
+                <path d="M 25 0 L 0 0 0 25"
+                      fill="none" stroke="#dbe7e8" stroke-width="1"/>
+              </pattern>
+            </defs>
+
+            <rect width="760" height="300" fill="#f5faf9"/>
+            <rect width="760" height="300" fill="url(#grid)"/>
+
+            <path d="M100 210 L380 90 L660 210"
+                  fill="none" stroke="#b9d1d4"
+                  stroke-width="13" stroke-linecap="round"/>
+
+            <path id="routeB" d="M100 210 L380 90 L660 210"
+                  fill="none" stroke="#1a9aa0"
+                  stroke-width="6" stroke-linecap="round"/>
+
+            <path id="segmentAB" d="M100 210 L380 90"
+                  fill="none" stroke="#1a9aa0"
+                  stroke-width="8" stroke-linecap="round"/>
+
+            <path id="segmentBC" d="M380 90 L660 210"
+                  fill="none" stroke="#1a9aa0"
+                  stroke-width="8" stroke-linecap="round"/>
+
+            <g id="nodeA" class="map-node">
+              <circle cx="100" cy="210" r="16"/>
+              <text x="100" y="215">A</text>
+              <text class="node-caption" x="100" y="244">Sensor A</text>
+            </g>
+
+            <g id="nodeB" class="map-node">
+              <circle cx="380" cy="90" r="16"/>
+              <text x="380" y="95">B</text>
+              <text class="node-caption" x="380" y="124">Sensor B</text>
+            </g>
+
+            <g id="nodeC" class="map-node">
+              <circle cx="660" cy="210" r="16"/>
+              <text x="660" y="215">C</text>
+              <text class="node-caption" x="660" y="244">Sensor C</text>
+            </g>
+
+            <text x="20" y="24" class="map-note">
+              SCHEMATIC — NOT A LIVE STREET MAP
+            </text>
+          </svg>
+        </div>
+
+        <div class="gps-row" id="gpsRow"></div>
+
+        <p class="note">
+          GPS points are demo coordinates. Replace them with surveyed sensor
+          coordinates. This offline schematic does not require internet.
+        </p>
+      </article>
+
+      <article class="panel">
+        <div class="panel-title">
+          <div>
+            <h3>Sensor readings</h3>
+            <p class="muted">Latest simulated node values</p>
+          </div>
+          <span class="live-label"><i></i> SIMULATED</span>
+        </div>
+
+        <div id="sensorCards" class="sensor-list"></div>
+
+        <div class="legend">
+          <span><i class="legend-dot good"></i>Normal</span>
+          <span><i class="legend-dot warn"></i>Warning</span>
+          <span><i class="legend-dot bad"></i>Fault</span>
+        </div>
+      </article>
+    </section>
+
+    <section class="panel chart-panel">
+      <div class="panel-title">
+        <div>
+          <h3>Pressure & flow trend</h3>
+          <p class="muted">Recent sample history (demo values)</p>
+        </div>
+        <button id="clearHistory" class="btn secondary">Clear history</button>
+      </div>
+
+      <canvas id="trendChart" width="1000" height="260"
+              aria-label="Pressure and flow trend chart"></canvas>
+
+      <div class="chart-legend">
+        <span><i class="line-key pressure"></i>Pressure (bar)</span>
+        <span><i class="line-key flow"></i>Flow (L/min)</span>
+      </div>
+    </section>
+
+    <section class="lower-grid">
+      <article class="panel">
+        <div class="panel-title">
+          <div>
+            <h3>Fault analysis</h3>
+            <p class="muted">Rule-based prototype; not a confirmed diagnosis</p>
+          </div>
+        </div>
+
+        <div id="faultBox" class="fault-box good">
+          <div class="fault-symbol">✓</div>
+          <div>
+            <strong>No unusual event detected</strong>
+            <p>Continue monitoring the network.</p>
+          </div>
+        </div>
+
+        <ul id="analysisList" class="analysis-list">
+          <li>Comparing pressure and flow across the three nodes.</li>
+          <li>Fault location is estimated from differences between sensor points.</li>
+        </ul>
+
+        <p class="note">
+          A pressure drop does not prove a leak or contamination.
+          Water-quality risk requires investigation and laboratory confirmation.
+        </p>
+      </article>
+
+      <article class="panel">
+        <div class="panel-title">
+          <div>
+            <h3>Alert history</h3>
+            <p class="muted">Saved on this device</p>
+          </div>
+          <button id="exportCsv" class="btn secondary">Export CSV</button>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Time</th>
+                <th>Event</th>
+                <th>Section</th>
+                <th>Level</th>
+              </tr>
+            </thead>
+            <tbody id="alertTable"></tbody>
+          </table>
+        </div>
+
+        <p class="note">
+          Local history uses browser storage. It remains on this device
+          unless you export it.
+        </p>
+      </article>
+    </section>
+
+    <section class="panel hardware-panel">
+      <div>
+        <h3>Hardware integration roadmap</h3>
+        <p class="muted">
+          Planned: ESP32 + pressure/flow sensors + LoRa receiver/gateway.
+        </p>
+      </div>
+
+      <div class="roadmap">
+        <span>1. Simulate & test</span><b>→</b>
+        <span>2. Connect ESP32</span><b>→</b>
+        <span>3. Validate in pipe rig</span>
+      </div>
+
+      <p class="note">
+        This website currently runs without a server or hardware. Live readings
+        require adding a device data interface and validating thresholds.
+      </p>
+    </section>
+
+    <footer>
+      JalRakshak 2.0 · Student prototype · Not for operational or public-health decisions
+    </footer>
+  </main>
+
+  <dialog id="coordsDialog">
+    <form method="dialog" id="coordsForm">
+      <div class="panel-title">
+        <div>
+          <h3>Configure sensor GPS points</h3>
+          <p class="muted">Enter latitude and longitude in decimal degrees.</p>
+        </div>
+        <button class="close-btn" value="cancel" aria-label="Close">×</button>
+      </div>
+
+      <div class="coord-inputs">
+        <label>Sensor A latitude<input id="latA" type="number" step="any" required></label>
+        <label>Sensor A longitude<input id="lonA" type="number" step="any" required></label>
+        <label>Sensor B latitude<input id="latB" type="number" step="any" required></label>
+        <label>Sensor B longitude<input id="lonB" type="number" step="any" required></label>
+        <label>Sensor C latitude<input id="latC" type="number" step="any" required></label>
+        <label>Sensor C longitude<input id="lonC" type="number" step="any" required></label>
+      </div>
+
+      <p class="note">
+        The offline map remains schematic; coordinates are displayed for each
+        node but do not geocode street addresses.
+      </p>
+
+      <div class="dialog-actions">
+        <button type="button" id="resetCoords" class="btn secondary">
+          Reset demo points
+        </button>
+        <button value="save" class="btn primary">Save coordinates</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script src="app.js"></script>
+</body>
+</html>

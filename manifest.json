@@ -1,0 +1,10 @@
+{
+  "name": "JalRakshak 2.0",
+  "short_name": "JalRakshak",
+  "description": "Offline-ready water network monitoring prototype",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#f2f7f7",
+  "theme_color": "#063b46",
+  "icons": []
+}
